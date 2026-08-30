@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>番茄钟</title>
+    <title>Pomodoro</title>
     <style>
         * {
             margin: 0;
@@ -270,7 +270,7 @@
         function startTimer() {
             isRunning = true;
             startBtn.textContent = '暂停';
-            document.title = `${formatTime(timeLeft)} - 番茄钟`;
+            document.title = `${formatTime(timeLeft)} - Pomodoro`;
             timerInterval = setInterval(() => {
                 timeLeft--;
                 updateDisplay();
@@ -284,7 +284,7 @@
         function pauseTimer() {
             isRunning = false;
             startBtn.textContent = '开始';
-            document.title = '番茄钟';
+            document.title = 'Pomodoro';
             clearInterval(timerInterval);
         }
 
