@@ -8,217 +8,76 @@
 <link rel="icon" href="./favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; background:#fff; color:#000; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; }
-.container { text-align:center; padding:40px 20px; width:100%; max-width:400px; }
-.mode-switcher { display:flex; gap:8px; margin-bottom:40px; justify-content:center; }
-.mode-btn { padding:8px 16px; border:1px solid #000; background:#fff; color:#000; font-size:14px; cursor:pointer; transition:all .2s; }
-.mode-btn:hover { background:#f0f0f0; }
-.mode-btn.active { background:#000; color:#fff; }
-.timer-display { font-size:96px; font-weight:200; line-height:1; margin-bottom:40px; font-variant-numeric:tabular-nums; letter-spacing:-2px; }
-.progress-ring { position:relative; width:280px; height:280px; margin:0 auto 40px; }
-.progress-ring svg { transform:rotate(-90deg); }
-.progress-ring-bg { fill:none; stroke:#e5e5e5; stroke-width:3; }
-.progress-ring-fill { fill:none; stroke:#000; stroke-width:3; stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
-.timer-text-overlay { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:64px; font-weight:200; font-variant-numeric:tabular-nums; }
-.controls { display:flex; gap:16px; justify-content:center; margin-bottom:30px; }
-.control-btn { padding:14px 36px; border:1px solid #000; background:#fff; color:#000; font-size:16px; cursor:pointer; min-width:100px; }
-.control-btn:hover { background:#f0f0f0; }
-.control-btn.primary { background:#000; color:#fff; }
-.control-btn.primary:hover { background:#333; }
-.task-input { width:100%; padding:12px 16px; border:1px solid #000; background:#fff; color:#000; font-size:16px; text-align:center; outline:none; margin-bottom:20px; }
-.task-input::placeholder { color:#999; }
-.stats { font-size:14px; color:#666; margin-top:20px; }
-.stats span { color:#000; font-weight:600; }
-@keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.02); } }
-.finished { animation:pulse 1s ease-in-out infinite; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#fff;color:#000;min-height:100vh;display:flex;align-items:center;justify-content:center;user-select:none}
+.container{text-align:center;padding:40px 20px;width:100%;max-width:400px}
+.mode-switcher{display:flex;gap:12px;margin-bottom:40px;justify-content:center}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation}
+.mode-btn,.control-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #000;background:#fff;color:#000;transition:background .2s,color .2s}
+.mode-btn{width:56px;height:44px}
+.mode-btn:hover,.control-btn:hover{background:#f0f0f0}
+.mode-btn.active,.control-btn.primary{background:#000;color:#fff}
+.control-btn.primary:hover{background:#333}
+.icon{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.mode-btn:focus-visible,.control-btn:focus-visible{outline:2px solid #000;outline-offset:3px}
+.progress-ring{position:relative;width:280px;height:280px;margin:0 auto 40px}
+.progress-ring svg{transform:rotate(-90deg)}
+.progress-ring-bg{fill:none;stroke:#e5e5e5;stroke-width:3}
+.progress-ring-fill{fill:none;stroke:#000;stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.timer-text-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:64px;font-weight:200;font-variant-numeric:tabular-nums}
+.controls{display:flex;gap:16px;justify-content:center;margin-bottom:30px}
+.control-btn{width:100px;height:52px}
+.control-btn .icon{width:25px;height:25px}
+.task-input{width:100%;padding:12px 16px;border:1px solid #000;background:#fff;color:#000;font-size:16px;text-align:center;outline:none;margin-bottom:20px}
+.task-input::placeholder{color:#999}
+.stats{font-size:14px;color:#666;margin-top:20px}.stats span{color:#000;font-weight:600}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}.finished{animation:pulse 1s ease-in-out infinite}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="mode-switcher">
-<button class="mode-btn active" data-mode="work" data-time="25">Focus</button>
-<button class="mode-btn" data-mode="shortBreak" data-time="5">Short Break</button>
-<button class="mode-btn" data-mode="longBreak" data-time="15">Long Break</button>
+<div class="mode-switcher" aria-label="Timer modes">
+<button class="mode-btn active" data-mode="work" data-time="25" aria-label="Focus" title="Focus" aria-pressed="true"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/></svg></button>
+<button class="mode-btn" data-mode="shortBreak" data-time="5" aria-label="Short Break" title="Short Break" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
+<button class="mode-btn" data-mode="longBreak" data-time="15" aria-label="Long Break" title="Long Break" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v8M9 5v14M15 5v14M20 8v8"/></svg></button>
 </div>
-<div class="progress-ring">
-<svg width="280" height="280"><circle class="progress-ring-bg" cx="140" cy="140" r="130"></circle><circle class="progress-ring-fill" cx="140" cy="140" r="130" stroke-dasharray="816.8" stroke-dashoffset="0"></circle></svg>
-<div class="timer-text-overlay" id="timerDisplay">25:00</div>
+<div class="progress-ring"><svg width="280" height="280"><circle class="progress-ring-bg" cx="140" cy="140" r="130"/><circle class="progress-ring-fill" cx="140" cy="140" r="130" stroke-dasharray="816.8" stroke-dashoffset="0"/></svg><div class="timer-text-overlay" id="timerDisplay">25:00</div></div>
+<input type="text" class="task-input" id="taskInput" placeholder="Current task..." aria-label="Current task">
+<div class="controls">
+<button class="control-btn primary" id="startBtn" aria-label="Start" title="Start"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg></button>
+<button class="control-btn" id="resetBtn" aria-label="Reset" title="Reset"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.6 6.4M3 4v7h7"/></svg></button>
 </div>
-<input type="text" class="task-input" id="taskInput" placeholder="Current task...">
-<div class="controls"><button class="control-btn primary" id="startBtn">Start</button><button class="control-btn" id="resetBtn">Reset</button></div>
 <div class="stats">Completed today: <span id="completedCount">0</span> pomodoros</div>
 </div>
 <script>
-const DEBUG = false; // Set to true to shorten all modes to 10 seconds for testing.
-const MODES = {
-  work: { time: DEBUG ? 10 : 25 * 60, label: 'Focus' },
-  shortBreak: { time: DEBUG ? 10 : 5 * 60, label: 'Short Break' },
-  longBreak: { time: DEBUG ? 10 : 15 * 60, label: 'Long Break' }
-};
-let currentMode = 'work';
-let timeLeft = MODES.work.time;
-let totalTime = MODES.work.time;
-let isRunning = false;
-let isFinished = false;
-let endTime = null;
-let timerInterval = null;
-let audioCtx = null;
-let completedPomodoros = parseInt(localStorage.getItem('completedPomodoros') || '0', 10);
-const timerDisplay = document.getElementById('timerDisplay');
-const startBtn = document.getElementById('startBtn');
-const resetBtn = document.getElementById('resetBtn');
-const modeBtns = document.querySelectorAll('.mode-btn');
-const progressRing = document.querySelector('.progress-ring-fill');
-const progressContainer = document.querySelector('.progress-ring');
-const completedCount = document.getElementById('completedCount');
-const taskInput = document.getElementById('taskInput');
-const CIRCUMFERENCE = 2 * Math.PI * 130;
-completedCount.textContent = completedPomodoros;
-updateDisplay();
-modeBtns.forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (isRunning) {
-      syncTimer();
-      if (!isRunning) return;
-      if (!confirm('Switching modes will reset the current timer. Continue?')) return;
-      pauseTimer();
-    }
-    clearFinished();
-    modeBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentMode = btn.dataset.mode;
-    totalTime = MODES[currentMode].time;
-    timeLeft = totalTime;
-    updateDisplay();
-    updateProgress();
-  });
-});
-startBtn.addEventListener('click', () => {
-  if (isRunning) pauseTimer();
-  else startTimer();
-});
-resetBtn.addEventListener('click', () => {
-  pauseTimer();
-  clearFinished();
-  timeLeft = totalTime;
-  updateDisplay();
-  updateProgress();
-});
-function clearFinished() {
-  isFinished = false;
-  progressContainer.classList.remove('finished');
-}
-function unlockAudio() {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return;
-  try {
-    if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContextClass();
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-  } catch (error) {
-    console.warn('Unable to initialize the alert sound:', error);
-  }
-}
-function startTimer() {
-  unlockAudio();
-  if (isFinished || timeLeft <= 0) {
-    clearFinished();
-    timeLeft = totalTime;
-  }
-  isRunning = true;
-  endTime = Date.now() + timeLeft * 1000;
-  startBtn.textContent = 'Pause';
-  clearInterval(timerInterval);
-  updateDisplay();
-  updateProgress();
-  timerInterval = setInterval(syncTimer, 250);
-}
-function syncTimer() {
-  if (!isRunning) return;
-  timeLeft = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
-  updateDisplay();
-  updateProgress();
-  if (timeLeft === 0) finishTimer();
-}
-function pauseTimer() {
-  if (isRunning) {
-    syncTimer();
-    if (!isRunning) return;
-  }
-  isRunning = false;
-  endTime = null;
-  startBtn.textContent = 'Start';
-  clearInterval(timerInterval);
-  timerInterval = null;
-  updateDisplay();
-}
-function finishTimer() {
-  if (!isRunning) return;
-  isRunning = false;
-  isFinished = true;
-  endTime = null;
-  timeLeft = 0;
-  clearInterval(timerInterval);
-  timerInterval = null;
-  startBtn.textContent = 'Start';
-  progressContainer.classList.add('finished');
-  updateDisplay();
-  updateProgress();
-  if (currentMode === 'work') {
-    completedPomodoros++;
-    localStorage.setItem('completedPomodoros', completedPomodoros);
-    completedCount.textContent = completedPomodoros;
-  }
-  playBeep();
-}
-function updateDisplay() {
-  timerDisplay.textContent = formatTime(timeLeft);
-  const modeLabel = MODES[currentMode].label;
-  document.title = isFinished
-    ? `${modeLabel} complete! - Pomodoro`
-    : `${formatTime(timeLeft)} · ${modeLabel} - Pomodoro`;
-}
-function updateProgress() {
-  progressRing.style.strokeDashoffset = CIRCUMFERENCE - (timeLeft / totalTime) * CIRCUMFERENCE;
-}
-function formatTime(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-function playBeep() {
-  if (!audioCtx || audioCtx.state === 'closed') return;
-  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
-  const start = audioCtx.currentTime + 0.02;
-  [
-    { delay: 0, frequency: 800, duration: 0.5 },
-    { delay: 0.2, frequency: 800, duration: 0.5 },
-    { delay: 0.4, frequency: 1000, duration: 0.8 }
-  ].forEach(({ delay, frequency, duration }) => {
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    oscillator.frequency.value = frequency;
-    oscillator.type = 'sine';
-    const at = start + delay;
-    gainNode.gain.setValueAtTime(0.3, at);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, at + duration);
-    oscillator.start(at);
-    oscillator.stop(at + duration);
-    oscillator.onended = () => { oscillator.disconnect(); gainNode.disconnect(); };
-  });
-}
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) syncTimer();
-});
-window.addEventListener('pageshow', syncTimer);
-document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && document.activeElement !== taskInput) {
-    e.preventDefault();
-    startBtn.click();
-  }
-});
+const DEBUG=false;
+const MODES={work:{time:DEBUG?10:25*60,label:'Focus'},shortBreak:{time:DEBUG?10:5*60,label:'Short Break'},longBreak:{time:DEBUG?10:15*60,label:'Long Break'}};
+let currentMode='work',timeLeft=MODES.work.time,totalTime=MODES.work.time,isRunning=false,isFinished=false,endTime=null,timerInterval=null,audioCtx=null;
+let completedPomodoros=parseInt(localStorage.getItem('completedPomodoros')||'0',10);
+const timerDisplay=document.getElementById('timerDisplay'),startBtn=document.getElementById('startBtn'),resetBtn=document.getElementById('resetBtn'),modeBtns=document.querySelectorAll('.mode-btn'),progressRing=document.querySelector('.progress-ring-fill'),progressContainer=document.querySelector('.progress-ring'),completedCount=document.getElementById('completedCount'),taskInput=document.getElementById('taskInput');
+const CIRCUMFERENCE=2*Math.PI*130;
+const PLAY_ICON='<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z"/></svg>';
+const PAUSE_ICON='<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>';
+function setStartButton(running){startBtn.innerHTML=running?PAUSE_ICON:PLAY_ICON;startBtn.setAttribute('aria-label',running?'Pause':'Start');startBtn.title=running?'Pause':'Start';}
+completedCount.textContent=completedPomodoros;updateDisplay();
+modeBtns.forEach(btn=>btn.addEventListener('click',()=>{
+ if(isRunning){syncTimer();if(!isRunning)return;if(!confirm('Switching modes will reset the current timer. Continue?'))return;pauseTimer();}
+ clearFinished();modeBtns.forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false');});btn.classList.add('active');btn.setAttribute('aria-pressed','true');currentMode=btn.dataset.mode;totalTime=MODES[currentMode].time;timeLeft=totalTime;updateDisplay();updateProgress();
+}));
+startBtn.addEventListener('click',()=>{if(isRunning)pauseTimer();else startTimer();});
+resetBtn.addEventListener('click',()=>{pauseTimer();clearFinished();timeLeft=totalTime;updateDisplay();updateProgress();});
+function clearFinished(){isFinished=false;progressContainer.classList.remove('finished');}
+function unlockAudio(){const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)return;try{if(!audioCtx||audioCtx.state==='closed')audioCtx=new AudioContextClass();if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});}catch(error){console.warn('Unable to initialize the alert sound:',error);}}
+function startTimer(){unlockAudio();if(isFinished||timeLeft<=0){clearFinished();timeLeft=totalTime;}isRunning=true;endTime=Date.now()+timeLeft*1000;setStartButton(true);clearInterval(timerInterval);updateDisplay();updateProgress();timerInterval=setInterval(syncTimer,250);}
+function syncTimer(){if(!isRunning)return;timeLeft=Math.max(0,Math.ceil((endTime-Date.now())/1000));updateDisplay();updateProgress();if(timeLeft===0)finishTimer();}
+function pauseTimer(){if(isRunning){syncTimer();if(!isRunning)return;}isRunning=false;endTime=null;setStartButton(false);clearInterval(timerInterval);timerInterval=null;updateDisplay();}
+function finishTimer(){if(!isRunning)return;isRunning=false;isFinished=true;endTime=null;timeLeft=0;clearInterval(timerInterval);timerInterval=null;setStartButton(false);progressContainer.classList.add('finished');updateDisplay();updateProgress();if(currentMode==='work'){completedPomodoros++;localStorage.setItem('completedPomodoros',completedPomodoros);completedCount.textContent=completedPomodoros;}playBeep();}
+function updateDisplay(){timerDisplay.textContent=formatTime(timeLeft);const label=MODES[currentMode].label;document.title=isFinished?`${label} complete! - Pomodoro`:`${formatTime(timeLeft)} · ${label} - Pomodoro`;}
+function updateProgress(){progressRing.style.strokeDashoffset=CIRCUMFERENCE-(timeLeft/totalTime)*CIRCUMFERENCE;}
+function formatTime(seconds){const m=Math.floor(seconds/60),s=seconds%60;return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
+function playBeep(){if(!audioCtx||audioCtx.state==='closed')return;if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});const start=audioCtx.currentTime+0.02;[{delay:0,frequency:800,duration:.5},{delay:.2,frequency:800,duration:.5},{delay:.4,frequency:1000,duration:.8}].forEach(({delay,frequency,duration})=>{const oscillator=audioCtx.createOscillator(),gainNode=audioCtx.createGain();oscillator.connect(gainNode);gainNode.connect(audioCtx.destination);oscillator.frequency.value=frequency;oscillator.type='sine';const at=start+delay;gainNode.gain.setValueAtTime(.3,at);gainNode.gain.exponentialRampToValueAtTime(.01,at+duration);oscillator.start(at);oscillator.stop(at+duration);oscillator.onended=()=>{oscillator.disconnect();gainNode.disconnect();};});}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncTimer();});window.addEventListener('pageshow',syncTimer);
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&document.activeElement!==taskInput){e.preventDefault();startBtn.click();}});
 </script>
 </body>
 </html>
