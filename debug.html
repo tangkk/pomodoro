@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>00:10 · 调试 - Pomodoro</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="icon" href="./favicon.ico" sizes="48x48">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #fff; color: #000; min-height: 100vh; display: flex; align-items: center; justify-content: center; user-select: none; }
+    .container { text-align: center; padding: 40px 20px; width: 100%; max-width: 420px; }
+    .debug-label { display: inline-block; padding: 6px 12px; border: 1px solid #000; font-size: 13px; margin-bottom: 28px; }
+    .mode-switcher, .controls { display: flex; gap: 8px; justify-content: center; }
+    .mode-switcher { margin-bottom: 38px; }
+    button { cursor: pointer; border: 1px solid #000; background: #fff; color: #000; }
+    .mode-btn { padding: 8px 16px; font-size: 14px; }
+    .mode-btn.active, .primary { background: #000; color: #fff; }
+    .progress-ring { position: relative; width: 280px; height: 280px; margin: 0 auto 40px; }
+    .progress-ring svg { transform: rotate(-90deg); }
+    .progress-ring-bg { fill: none; stroke: #e5e5e5; stroke-width: 3; }
+    .progress-ring-fill { fill: none; stroke: #000; stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 0.25s linear; }
+    .timer-text-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 64px; font-weight: 200; font-variant-numeric: tabular-nums; }
+    .task-input { width: 100%; padding: 12px 16px; border: 1px solid #000; background: #fff; text-align: center; font-size: 16px; outline: none; margin-bottom: 20px; }
+    .controls { gap: 16px; margin-bottom: 22px; }
+    .control-btn { padding: 14px 36px; min-width: 100px; font-size: 16px; }
+    .hint { font-size: 13px; color: #666; line-height: 1.7; }
+    .hint a { color: #000; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+    .finished { animation: pulse 1s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="debug-label">调试模式 · 所有模式均为 10 秒</div>
+    <div class="mode-switcher">
+      <button class="mode-btn active" data-mode="work">专注</button>
+      <button class="mode-btn" data-mode="shortBreak">短休</button>
+      <button class="mode-btn" data-mode="longBreak">长休</button>
+    </div>
+    <div class="progress-ring" id="progressContainer">
+      <svg width="280" height="280">
+        <circle class="progress-ring-bg" cx="140" cy="140" r="130"></circle>
+        <circle class="progress-ring-fill" cx="140" cy="140" r="130" stroke-dasharray="816.8" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="timer-text-overlay" id="timerDisplay">00:10</div>
+    </div>
+    <input type="text" class="task-input" id="taskInput" placeholder="当前任务...">
+    <div class="controls">
+      <button class="control-btn primary" id="startBtn">开始</button>
+      <button class="control-btn" id="resetBtn">重置</button>
+    </div>
+    <p class="hint">点击开始后切换到其他 Chrome Tab，等待 10 秒测试提示音。<br>调试完成次数不会写入正式统计。<br><a href="./index.html">返回正式版</a></p>
+  </div>
+  <script>
+    // 独立的调试页面：保留正式版的计时、标题和 Web Audio 行为，隔离正式统计。
+    const MODES = {
+      work: { time: 10, label: '专注' },
+      shortBreak: { time: 10, label: '短休' },
+      longBreak: { time: 10, label: '长休' }
+    };
+    let currentMode = 'work';
+    let timeLeft = MODES.work.time;
+    let totalTime = MODES.work.time;
+    let isRunning = false;
+    let isFinished = false;
+    let endTime = null;
+    let timerInterval = null;
+    let audioCtx = null;
+
+    const timerDisplay = document.getElementById('timerDisplay');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const progressRing = document.querySelector('.progress-ring-fill');
+    const progressContainer = document.getElementById('progressContainer');
+    const taskInput = document.getElementById('taskInput');
+    const CIRCUMFERENCE = 2 * Math.PI * 130;
+
+    function clearFinished() {
+      isFinished = false;
+      progressContainer.classList.remove('finished');
+    }
+
+    function unlockAudio() {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      try {
+        if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContextClass();
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      } catch (error) {
+        console.warn('无法初始化提示音：', error);
+      }
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+      timerDisplay.textContent = formatTime(timeLeft);
+      const label = MODES[currentMode].label;
+      document.title = isFinished
+        ? `${label}完成！· 调试 - Pomodoro`
+        : `${formatTime(timeLeft)} · ${isRunning ? label : label + '（已暂停）'} · 调试 - Pomodoro`;
+    }
+
+    function updateProgress() {
+      progressRing.style.strokeDashoffset = CIRCUMFERENCE - (timeLeft / totalTime) * CIRCUMFERENCE;
+    }
+
+    function startTimer() {
+      unlockAudio();
+      if (isFinished || timeLeft <= 0) {
+        clearFinished();
+        timeLeft = totalTime;
+      }
+      isRunning = true;
+      endTime = Date.now() + timeLeft * 1000;
+      startBtn.textContent = '暂停';
+      clearInterval(timerInterval);
+      updateDisplay();
+      updateProgress();
+      timerInterval = setInterval(syncTimer, 250);
+    }
+
+    function syncTimer() {
+      if (!isRunning) return;
+      timeLeft = Math.max(0, Math.ceil((endTime - Date.now()) / 1000));
+      updateDisplay();
+      updateProgress();
+      if (timeLeft === 0) finishTimer();
+    }
+
+    function pauseTimer() {
+      if (isRunning) {
+        syncTimer();
+        if (!isRunning) return;
+      }
+      isRunning = false;
+      endTime = null;
+      startBtn.textContent = '开始';
+      clearInterval(timerInterval);
+      timerInterval = null;
+      updateDisplay();
+    }
+
+    function finishTimer() {
+      if (!isRunning) return;
+      isRunning = false;
+      isFinished = true;
+      endTime = null;
+      timeLeft = 0;
+      clearInterval(timerInterval);
+      timerInterval = null;
+      startBtn.textContent = '开始';
+      progressContainer.classList.add('finished');
+      updateDisplay();
+      updateProgress();
+      playBeep();
+    }
+
+    function playBeep() {
+      if (!audioCtx || audioCtx.state === 'closed') return;
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      const start = audioCtx.currentTime + 0.02;
+      [
+        { delay: 0, frequency: 800, duration: 0.5 },
+        { delay: 0.2, frequency: 800, duration: 0.5 },
+        { delay: 0.4, frequency: 1000, duration: 0.8 }
+      ].forEach(({ delay, frequency, duration }) => {
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        const at = start + delay;
+        gainNode.gain.setValueAtTime(0.3, at);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, at + duration);
+        oscillator.start(at);
+        oscillator.stop(at + duration);
+        oscillator.onended = () => { oscillator.disconnect(); gainNode.disconnect(); };
+      });
+    }
+
+    modeBtns.forEach(btn => btn.addEventListener('click', () => {
+      if (isRunning) {
+        syncTimer();
+        if (!isRunning) return;
+        if (!confirm('切换模式会重置当前计时，是否继续？')) return;
+        pauseTimer();
+      }
+      clearFinished();
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentMode = btn.dataset.mode;
+      totalTime = MODES[currentMode].time;
+      timeLeft = totalTime;
+      updateDisplay();
+      updateProgress();
+    }));
+
+    startBtn.addEventListener('click', () => {
+      if (isRunning) pauseTimer();
+      else startTimer();
+    });
+    resetBtn.addEventListener('click', () => {
+      pauseTimer();
+      clearFinished();
+      timeLeft = totalTime;
+      updateDisplay();
+      updateProgress();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) syncTimer();
+    });
+    window.addEventListener('pageshow', syncTimer);
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && document.activeElement !== taskInput) {
+        e.preventDefault();
+        startBtn.click();
+      }
+    });
+    updateDisplay();
+  </script>
+</body>
+</html>
