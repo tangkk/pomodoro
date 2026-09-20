@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>00:10 · 调试 - Pomodoro</title>
+  <title>00:10 · Debug - Pomodoro</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg">
   <link rel="icon" href="./favicon.ico" sizes="48x48">
   <style>
@@ -32,11 +32,11 @@
 </head>
 <body>
   <div class="container">
-    <div class="debug-label">调试模式 · 所有模式均为 10 秒</div>
+    <div class="debug-label">Debug mode · All modes last 10 seconds</div>
     <div class="mode-switcher">
-      <button class="mode-btn active" data-mode="work">专注</button>
-      <button class="mode-btn" data-mode="shortBreak">短休</button>
-      <button class="mode-btn" data-mode="longBreak">长休</button>
+      <button class="mode-btn active" data-mode="work">Focus</button>
+      <button class="mode-btn" data-mode="shortBreak">Short Break</button>
+      <button class="mode-btn" data-mode="longBreak">Long Break</button>
     </div>
     <div class="progress-ring" id="progressContainer">
       <svg width="280" height="280">
@@ -45,19 +45,19 @@
       </svg>
       <div class="timer-text-overlay" id="timerDisplay">00:10</div>
     </div>
-    <input type="text" class="task-input" id="taskInput" placeholder="当前任务...">
+    <input type="text" class="task-input" id="taskInput" placeholder="Current task...">
     <div class="controls">
-      <button class="control-btn primary" id="startBtn">开始</button>
-      <button class="control-btn" id="resetBtn">重置</button>
+      <button class="control-btn primary" id="startBtn">Start</button>
+      <button class="control-btn" id="resetBtn">Reset</button>
     </div>
-    <p class="hint">点击开始后切换到其他 Chrome Tab，等待 10 秒测试提示音。<br>调试完成次数不会写入正式统计。<br><a href="./index.html">返回正式版</a></p>
+    <p class="hint">Click Start, switch to another Chrome tab, and wait 10 seconds to test the alert sound.<br>Debug sessions do not affect your completion count.<br><a href="./index.html">Back to the main timer</a></p>
   </div>
   <script>
-    // 独立的调试页面：保留正式版的计时、标题和 Web Audio 行为，隔离正式统计。
+    // Standalone debug page: use the same timing, title, and audio behavior without changing the main completion count.
     const MODES = {
-      work: { time: 10, label: '专注' },
-      shortBreak: { time: 10, label: '短休' },
-      longBreak: { time: 10, label: '长休' }
+      work: { time: 10, label: 'Focus' },
+      shortBreak: { time: 10, label: 'Short Break' },
+      longBreak: { time: 10, label: 'Long Break' }
     };
     let currentMode = 'work';
     let timeLeft = MODES.work.time;
@@ -89,7 +89,7 @@
         if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContextClass();
         if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
       } catch (error) {
-        console.warn('无法初始化提示音：', error);
+        console.warn('Unable to initialize the alert sound:', error);
       }
     }
 
@@ -103,8 +103,8 @@
       timerDisplay.textContent = formatTime(timeLeft);
       const label = MODES[currentMode].label;
       document.title = isFinished
-        ? `${label}完成！· 调试 - Pomodoro`
-        : `${formatTime(timeLeft)} · ${label} · 调试 - Pomodoro`;
+        ? `${label} complete! · Debug - Pomodoro`
+        : `${formatTime(timeLeft)} · ${label} · Debug - Pomodoro`;
     }
 
     function updateProgress() {
@@ -119,7 +119,7 @@
       }
       isRunning = true;
       endTime = Date.now() + timeLeft * 1000;
-      startBtn.textContent = '暂停';
+      startBtn.textContent = 'Pause';
       clearInterval(timerInterval);
       updateDisplay();
       updateProgress();
@@ -141,7 +141,7 @@
       }
       isRunning = false;
       endTime = null;
-      startBtn.textContent = '开始';
+      startBtn.textContent = 'Start';
       clearInterval(timerInterval);
       timerInterval = null;
       updateDisplay();
@@ -155,7 +155,7 @@
       timeLeft = 0;
       clearInterval(timerInterval);
       timerInterval = null;
-      startBtn.textContent = '开始';
+      startBtn.textContent = 'Start';
       progressContainer.classList.add('finished');
       updateDisplay();
       updateProgress();
@@ -190,7 +190,7 @@
       if (isRunning) {
         syncTimer();
         if (!isRunning) return;
-        if (!confirm('切换模式会重置当前计时，是否继续？')) return;
+        if (!confirm('Switching modes will reset the current timer. Continue?')) return;
         pauseTimer();
       }
       clearFinished();
