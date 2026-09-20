@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>25:00 · 专注 - Pomodoro</title>
+<title>25:00 · Focus - Pomodoro</title>
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="icon" href="./favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -37,24 +37,24 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica
 <body>
 <div class="container">
 <div class="mode-switcher">
-<button class="mode-btn active" data-mode="work" data-time="25">专注</button>
-<button class="mode-btn" data-mode="shortBreak" data-time="5">短休</button>
-<button class="mode-btn" data-mode="longBreak" data-time="15">长休</button>
+<button class="mode-btn active" data-mode="work" data-time="25">Focus</button>
+<button class="mode-btn" data-mode="shortBreak" data-time="5">Short Break</button>
+<button class="mode-btn" data-mode="longBreak" data-time="15">Long Break</button>
 </div>
 <div class="progress-ring">
 <svg width="280" height="280"><circle class="progress-ring-bg" cx="140" cy="140" r="130"></circle><circle class="progress-ring-fill" cx="140" cy="140" r="130" stroke-dasharray="816.8" stroke-dashoffset="0"></circle></svg>
 <div class="timer-text-overlay" id="timerDisplay">25:00</div>
 </div>
-<input type="text" class="task-input" id="taskInput" placeholder="当前任务...">
-<div class="controls"><button class="control-btn primary" id="startBtn">开始</button><button class="control-btn" id="resetBtn">重置</button></div>
-<div class="stats">今日完成: <span id="completedCount">0</span> 个番茄</div>
+<input type="text" class="task-input" id="taskInput" placeholder="Current task...">
+<div class="controls"><button class="control-btn primary" id="startBtn">Start</button><button class="control-btn" id="resetBtn">Reset</button></div>
+<div class="stats">Completed today: <span id="completedCount">0</span> pomodoros</div>
 </div>
 <script>
-const DEBUG = false; // 调试时所有模式改为 10 秒
+const DEBUG = false; // Set to true to shorten all modes to 10 seconds for testing.
 const MODES = {
-  work: { time: DEBUG ? 10 : 25 * 60, label: '专注' },
-  shortBreak: { time: DEBUG ? 10 : 5 * 60, label: '短休' },
-  longBreak: { time: DEBUG ? 10 : 15 * 60, label: '长休' }
+  work: { time: DEBUG ? 10 : 25 * 60, label: 'Focus' },
+  shortBreak: { time: DEBUG ? 10 : 5 * 60, label: 'Short Break' },
+  longBreak: { time: DEBUG ? 10 : 15 * 60, label: 'Long Break' }
 };
 let currentMode = 'work';
 let timeLeft = MODES.work.time;
@@ -81,7 +81,7 @@ modeBtns.forEach(btn => {
     if (isRunning) {
       syncTimer();
       if (!isRunning) return;
-      if (!confirm('切换模式会重置当前计时，是否继续？')) return;
+      if (!confirm('Switching modes will reset the current timer. Continue?')) return;
       pauseTimer();
     }
     clearFinished();
@@ -116,7 +116,7 @@ function unlockAudio() {
     if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContextClass();
     if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   } catch (error) {
-    console.warn('无法初始化提示音：', error);
+    console.warn('Unable to initialize the alert sound:', error);
   }
 }
 function startTimer() {
@@ -127,7 +127,7 @@ function startTimer() {
   }
   isRunning = true;
   endTime = Date.now() + timeLeft * 1000;
-  startBtn.textContent = '暂停';
+  startBtn.textContent = 'Pause';
   clearInterval(timerInterval);
   updateDisplay();
   updateProgress();
@@ -147,7 +147,7 @@ function pauseTimer() {
   }
   isRunning = false;
   endTime = null;
-  startBtn.textContent = '开始';
+  startBtn.textContent = 'Start';
   clearInterval(timerInterval);
   timerInterval = null;
   updateDisplay();
@@ -160,7 +160,7 @@ function finishTimer() {
   timeLeft = 0;
   clearInterval(timerInterval);
   timerInterval = null;
-  startBtn.textContent = '开始';
+  startBtn.textContent = 'Start';
   progressContainer.classList.add('finished');
   updateDisplay();
   updateProgress();
@@ -175,7 +175,7 @@ function updateDisplay() {
   timerDisplay.textContent = formatTime(timeLeft);
   const modeLabel = MODES[currentMode].label;
   document.title = isFinished
-    ? `${modeLabel}完成！- Pomodoro`
+    ? `${modeLabel} complete! - Pomodoro`
     : `${formatTime(timeLeft)} · ${modeLabel} - Pomodoro`;
 }
 function updateProgress() {
