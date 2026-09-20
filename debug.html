@@ -104,7 +104,7 @@
       const label = MODES[currentMode].label;
       document.title = isFinished
         ? `${label}完成！· 调试 - Pomodoro`
-        : `${formatTime(timeLeft)} · ${isRunning ? label : label + '（已暂停）'} · 调试 - Pomodoro`;
+        : `${formatTime(timeLeft)} · ${label} · 调试 - Pomodoro`;
     }
 
     function updateProgress() {
